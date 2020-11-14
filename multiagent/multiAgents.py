@@ -88,8 +88,8 @@ class ReflexAgent(Agent):
         if food:
           closestFood = min([manhattanDistance(newPos, _food) for _food in food])
           foodDistance = closestFood
-        # print foodDistance
-        return -ghostDistance + foodDistance  - 100*len(food)
+        # print len(food)
+        return -ghostDistance - foodDistance
 def scoreEvaluationFunction(currentGameState):
     """
       This default evaluation function just returns the score of the state.
