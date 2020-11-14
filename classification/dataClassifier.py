@@ -23,7 +23,7 @@ import mira
 import samples
 import sys
 import util
-from pacman import GameState
+from pacman import GameState, Directions
 
 TEST_SET_SIZE = 100
 DIGIT_DATUM_WIDTH=28
@@ -67,30 +67,49 @@ def basicFeatureExtractorFace(datum):
 def enhancedFeatureExtractorDigit(datum):
     """
     Your feature extraction playground.
-
     You should return a util.Counter() of features
     for this datum (datum is of type samples.Datum).
-
     ## DESCRIBE YOUR ENHANCED FEATURES HERE...
-
+    Tim cac vung
+    Co the co 1, 2, 3 vung
     ##
     """
     features =  basicFeatureExtractorDigit(datum)
-
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-
+    regions = 0
+    marked = [[0 for j in range(DIGIT_DATUM_HEIGHT)] for i in range(DIGIT_DATUM_WIDTH)]
+    for x in range(DIGIT_DATUM_WIDTH):
+        for y in range(DIGIT_DATUM_HEIGHT):
+            if(datum.getPixel(x,y) == 0 and marked[x][y] == 0):
+                marked = pixArray(datum, x, y, marked)
+                regions += 1
+    features[1] = 0
+    features[2] = 0
+    features[3] = 0
+    features[regions] = 1
     return features
 
-
+def pixArray(datum, x, y, marked):
+    marked[x][y] = 1
+    next = []
+    if(x != 0):
+        next.append((x-1, y))
+    if(x !=  DIGIT_DATUM_WIDTH - 1):
+        next.append((x+1, y))
+    if(y != 0):
+        next.append((x, y-1))
+    if(y !=  DIGIT_DATUM_HEIGHT - 1):
+        next.append((x, y+1))
+    for (px, py) in next:
+        if(datum.getPixel(px,py) == 0 and marked[px][py] == 0):
+            marked = pixArray(datum, px, py, marked)
+    return marked
 
 def basicFeatureExtractorPacman(state):
     """
     A basic feature extraction function.
-
     You should return a util.Counter() of features
     for each (state, action) pair along with a list of the legal actions
-
     ##
     """
     features = util.Counter()
@@ -105,10 +124,8 @@ def basicFeatureExtractorPacman(state):
 def enhancedFeatureExtractorPacman(state):
     """
     Your feature extraction playground.
-
     You should return a util.Counter() of features
     for each (state, action) pair along with a list of the legal actions
-
     ##
     """
 
@@ -124,7 +141,33 @@ def enhancedPacmanFeatures(state, action):
     """
     features = util.Counter()
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    features["STOP"] = int(action == Directions.STOP) * 100
+    successor = state.generateSuccessor(0, action)
+    pac_pos = successor.getPacmanPosition()
+    ghosts = successor.getGhostPositions()
+    capsules = successor.getCapsules()
+    state_food = state.getFood()
+    ghostStates = successor.getGhostStates()
+
+    food = [(x, y) for x, row in enumerate(state_food) for y, food in enumerate(row) if food]
+
+    
+    nearest_ghosts = sorted([util.manhattanDistance(pac_pos, i) for i in ghosts])
+    features["nearest_ghost"] = 0 if len(nearest_ghosts) == 0 else nearest_ghosts[0] * 1.0
+
+    nearest_caps = sorted([util.manhattanDistance(pac_pos, i) for i in capsules])
+    features["nearest_capsule"] = 0 if len(nearest_caps) == 0 else nearest_caps[0] * 1.0
+    features["capsule_count"] = len(capsules) * 10
+    for i in xrange(min(len(nearest_caps), 1)):
+        features[("capsule", i)] = 15 / (1 + nearest_caps[i])
+
+
+    nearest_food = sorted([util.manhattanDistance(pac_pos, i) for i in food])
+
+    for i, weight in zip(xrange(min(len(nearest_food), 5)), [1.3, 0.8] + [0.91] * 3):
+        features[("food", i)] = weight * nearest_food[i]
+
+    features['scare_times'] = sum([(ghost.scaredTimer == 0) for ghost in ghostStates]) * 10
     return features
 
 
@@ -147,11 +190,8 @@ def analysis(classifier, guesses, testLabels, testData, rawTestData, printImage)
     """
     This function is called after learning.
     Include any code that you want here to help you analyze your results.
-
     Use the printImage(<list of pixels>) function to visualize features.
-
     An example of use has been given to you.
-
     - classifier is the trained classifier
     - guesses is the list of labels predicted by your classifier on the test set
     - testLabels is the list of true labels
@@ -159,7 +199,6 @@ def analysis(classifier, guesses, testLabels, testData, rawTestData, printImage)
     - rawTestData is the list of training datapoints (as samples.Datum)
     - printImage is a method to visualize the features
     (see its use in the odds ratio part in runClassifier method)
-
     This code won't be evaluated. It is for your own optional use
     (and you can modify the signature if you want).
     """
@@ -193,7 +232,6 @@ class ImagePrinter:
         Prints a Datum object that contains all pixels in the
         provided list of pixels.  This will serve as a helper function
         to the analysis function you write.
-
         Pixels should take the form
         [(2,2), (2, 3), ...]
         where each tuple represents a pixel.

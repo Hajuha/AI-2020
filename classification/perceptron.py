@@ -19,7 +19,6 @@ PRINT = True
 class PerceptronClassifier:
     """
     Perceptron classifier.
-
     Note that the variable 'datum' in this code refers to a counter of features
     (not to a raw samples.Datum).
     """
@@ -40,28 +39,39 @@ class PerceptronClassifier:
         The training loop for the perceptron passes through the training data several
         times and updates the weight vector for each label based on classification errors.
         See the project description for details.
-
         Use the provided self.weights[label] data structure so that
         the classify method works correctly. Also, recall that a
         datum is a counter from features to values for those features
         (and thus represents a vector a values).
         """
 
+        # self.features = trainingData[0].keys() # could be useful later
+        # # DO NOT ZERO OUT YOUR WEIGHTS BEFORE STARTING TRAINING, OR
+        # # THE AUTOGRADER WILL LIKELY DEDUCT POINTS.
+
+        # for iteration in range(self.max_iterations):
+        #     print "Starting iteration ", iteration, "..."
+        #     for i in range(len(trainingData)):
+        #         "*** YOUR CODE HERE ***"
+        #         util.raiseNotDefined()
         self.features = trainingData[0].keys() # could be useful later
         # DO NOT ZERO OUT YOUR WEIGHTS BEFORE STARTING TRAINING, OR
         # THE AUTOGRADER WILL LIKELY DEDUCT POINTS.
-
         for iteration in range(self.max_iterations):
             print "Starting iteration ", iteration, "..."
             for i in range(len(trainingData)):
-                "*** YOUR CODE HERE ***"
-                util.raiseNotDefined()
+                f = trainingData[i]
+                ytrue = trainingLabels[i]
+                score_max, ypred = max([
+                    (f * self.weights[y],y) for y in self.legalLabels])
+                if ypred != ytrue:
+                    self.weights[ytrue] += f
+                    self.weights[ypred] -= f
 
     def classify(self, data ):
         """
         Classifies each datum as the label that most closely matches the prototype vector
         for that label.  See the project description for details.
-
         Recall that a datum is a util.counter...
         """
         guesses = []
@@ -77,9 +87,9 @@ class PerceptronClassifier:
         """
         Returns a list of the 100 features with the greatest weight for some label
         """
-        featuresWeights = []
-
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        wy = self.weights[label]
+        wy = sorted( [(v,k) for k,v in wy.items()], reverse=True )
+        featuresWeights = [e[1] for e in wy[:100]]
 
         return featuresWeights
